@@ -163,7 +163,7 @@ def main( argv ):
     client.on_connect = on_connect
     client.on_publish = on_publish
     client.on_message = on_message
-    # client.on_disconnect = on_disconnect  # This is throwing: "TypeError: on_disconnect() takes 0 positional arguments but 3 were given" when the program closes.
+    client.on_disconnect = on_disconnect  # This is throwing: "TypeError: on_disconnect() takes 0 positional arguments but 3 were given" when the program closes.
 
     # Connect using the details from the configuration file.
     client.connect( configuration['brokerAddress'], int( configuration['brokerPort'] ) )
