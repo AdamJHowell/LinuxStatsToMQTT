@@ -15,7 +15,6 @@ import gpiozero as gz
 import paho.mqtt.client as mqtt
 from uuid import getnode as get_mac
 
-
 client = mqtt.Client( client_id = "PySHT40toMQTT" )
 telemetry = json.loads( '{}' )
 configuration = json.loads( '{}' )
@@ -32,10 +31,13 @@ def on_connect( con_client, userdata, flags, result ):
     print( str( flags ) )
 
 
-def on_disconnect( dc_client, userdata, rc ):
-  print( "Disconnected from the broker!  Reason: " + str( rc ) )
+def on_disconnect( dc_client, userdata, result ):
+  print( "Disconnected from the broker!  Reason: " + str( result ) )
   client.connected_flag = False
   client.disconnect_flag = True
+  if result == 2112:  # This should be unreachable, and should not cause problems if it is reached.
+    print( str( dc_client ) )
+    print( str( userdata ) )
 
 
 def on_message( sub_client, userdata, msg ):
