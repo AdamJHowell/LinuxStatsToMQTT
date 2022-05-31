@@ -88,9 +88,7 @@ def on_publish( pub_client, userdata, result ):
 
 def get_ip():
   sock = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-  # sock.settimeout( 0 )
   try:
-    # This address doesn't need to be reachable.
     sock.connect( ("8.8.8.8", 80) )
     ip = sock.getsockname()[0]
   except InterruptedError:
@@ -161,7 +159,7 @@ def main( argv ):
     client.on_connect = on_connect
     client.on_publish = on_publish
     client.on_message = on_message
-    # client.on_disconnect = on_disconnect  # This is throwing: "TypeError: on_disconnect() takes 0 positional arguments but 3 were given" when the program closes.
+    client.on_disconnect = on_disconnect  # This is throwing: "TypeError: on_disconnect() takes 0 positional arguments but 3 were given" when the program closes.
 
     # Connect using the details from the configuration file.
     client.connect( configuration['brokerAddress'], int( configuration['brokerPort'] ) )
