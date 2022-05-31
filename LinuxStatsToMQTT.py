@@ -115,6 +115,7 @@ def get_timestamp():
 def publish_telemetry():
   telemetry['timeStamp'] = get_timestamp()
   client.publish( topic = configuration['publishTopic'], payload = json.dumps( telemetry, indent = '\t' ), qos = configuration['brokerQoS'] )
+  print( "Publishing to " + configuration['publishTopic'] )
   print( json.dumps( telemetry, indent = 3 ) )
 
 
