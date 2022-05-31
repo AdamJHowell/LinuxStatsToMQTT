@@ -32,8 +32,10 @@ def on_connect( con_client, userdata, flags, result ):
     print( str( flags ) )
 
 
-def on_disconnect():
-  print( "Disconnected from broker!" )
+def on_disconnect( dc_client, userdata, rc ):
+  print( "Disconnected from the broker!  Reason: " + str( rc ) )
+  client.connected_flag = False
+  client.disconnect_flag = True
 
 
 def on_message( sub_client, userdata, msg ):
@@ -159,7 +161,7 @@ def main( argv ):
     client.on_connect = on_connect
     client.on_publish = on_publish
     client.on_message = on_message
-    client.on_disconnect = on_disconnect  # This is throwing: "TypeError: on_disconnect() takes 0 positional arguments but 3 were given" when the program closes.
+    # client.on_disconnect = on_disconnect  # This is throwing: "TypeError: on_disconnect() takes 0 positional arguments but 3 were given" when the program closes.
 
     # Connect using the details from the configuration file.
     client.connect( configuration['brokerAddress'], int( configuration['brokerPort'] ) )
