@@ -20,6 +20,7 @@ configuration = json.loads( '{}' )
 config_file_name = "config.json"
 last_publish = 0
 telemetry['macAddress'] = ':'.join( ("%012X" % get_mac())[i:i + 2] for i in range( 0, 12, 2 ) )
+print( "Client ID will be " + telemetry['macAddress'] )
 client = mqtt.Client( client_id = telemetry['macAddress'] )
 
 
