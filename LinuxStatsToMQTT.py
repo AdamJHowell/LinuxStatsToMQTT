@@ -15,11 +15,12 @@ import gpiozero as gz
 import paho.mqtt.client as mqtt
 from uuid import getnode as get_mac
 
-client = mqtt.Client( client_id = "PySHT40toMQTT" )
 telemetry = json.loads( '{}' )
 configuration = json.loads( '{}' )
 config_file_name = "config.json"
 last_publish = 0
+telemetry['macAddress'] = ':'.join( ("%012X" % get_mac())[i:i + 2] for i in range( 0, 12, 2 ) )
+client = mqtt.Client( client_id = telemetry['macAddress'] )
 
 
 def on_connect( con_client, userdata, flags, result ):
@@ -132,8 +133,15 @@ def main( argv ):
     with open( config_file_name, "r" ) as config_file:
       configuration = json.load( config_file )
 
-    get_ip()
+    # Create the Dictionary to hold results, and set the static components.
+    telemetry['ipAddress'] = get_ip()
     host_name = socket.gethostname()
+    telemetry['host'] = host_name
+    telemetry['timeStamp'] = get_timestamp()
+    if 'notes' in configuration:
+      telemetry['notes'] = configuration['notes']
+    telemetry['brokerAddress'] = configuration['brokerAddress']
+    telemetry['brokerPort'] = configuration['brokerPort']
     print( "Hostname: " + host_name )
     print( "Current time: " + get_timestamp() )
     print( "Using broker address: " + configuration['brokerAddress'] )
@@ -142,16 +150,6 @@ def main( argv ):
     print( "Subscribing to the control topic: \"" + configuration['controlTopic'] + "\"" )
     print( "Publishing and subscribing using QoS: " + str( configuration['brokerQoS'] ) )
     print( "Waiting " + str( configuration['publishInterval'] ) + " seconds between publishes (non-blocking)." )
-
-    # Create the Dictionary to hold results, and set the static components.
-    telemetry['host'] = host_name
-    telemetry['timeStamp'] = get_timestamp()
-    if 'notes' in configuration:
-      telemetry['notes'] = configuration['notes']
-    telemetry['brokerAddress'] = configuration['brokerAddress']
-    telemetry['brokerPort'] = configuration['brokerPort']
-    telemetry['ipAddress'] = get_ip()
-    telemetry['macAddress'] = ':'.join( ("%012X" % get_mac())[i:i + 2] for i in range( 0, 12, 2 ) )
 
     # Assign callback functions.
     client.on_connect = on_connect
