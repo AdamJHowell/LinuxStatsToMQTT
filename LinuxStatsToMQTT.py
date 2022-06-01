@@ -33,8 +33,6 @@ def on_connect( con_client, userdata, flags, result ):
 
 def on_disconnect( dc_client, userdata, result ):
   print( "Disconnected from the broker!  Reason: " + str( result ) )
-  client.connected_flag = False
-  client.disconnect_flag = True
   if result == 2112:  # This should be unreachable, and should not cause problems if it is reached.
     print( str( dc_client ) )
     print( str( userdata ) )
@@ -48,37 +46,27 @@ def on_message( sub_client, userdata, msg ):
   if 'command' in message:
     command = message['command']
     print( "Processing command \"" + command + "\"" )
-    match command.casefold():
-      case "publishTelemetry":
-        poll_telemetry()
-        publish_telemetry()
-        last_publish = epoch_time()
-      case "changeTelemetryInterval":
-        old_value = configuration['publishInterval']
-        new_value = message['value']
-        if old_value != new_value and new_value > 4:
-          print( "Old publish interval: " + old_value )
-          configuration['publishInterval'] = new_value
-          print( "New publish interval: " + configuration['publishInterval'] )
-        else:
-          print( "Not changing the telemetry publish interval." )
-      case "changeSeaLevelPressure":
-        old_value = configuration['seaLevelPressure']
-        new_value = message['value']
-        if old_value != new_value and 100 < new_value < 10000:
-          print( "Old sea level pressure: " + old_value )
-          configuration['seaLevelPressure'] = new_value
-          print( "New sea level pressure: " + configuration['seaLevelPressure'] )
-        else:
-          print( "Not changing the sea level pressure." )
-      case "publishStatus":
-        publish_telemetry()
-      case "debug":
-        print( str( sub_client ) )
-        print( str( userdata ) )
-      case _:
-        print( "The command \"" + str( command ) + "\" is not recognized." )
-        print( "Currently recognized commands are:\n\tpublishTelemetry\n\tchangeTelemetryInterval\n\tchangeSeaLevelPressure\n\tpublishStatus" )
+    if command == "publishTelemetry":
+      poll_telemetry()
+      publish_telemetry()
+      last_publish = epoch_time()
+    elif command == "changeTelemetryInterval":
+      old_value = configuration['publishInterval']
+      new_value = message['value']
+      if old_value != new_value and new_value > 4:
+        print( "Old publish interval: " + old_value )
+        configuration['publishInterval'] = new_value
+        print( "New publish interval: " + configuration['publishInterval'] )
+      else:
+        print( "Not changing the telemetry publish interval." )
+    elif command == "publishStatus":
+      publish_telemetry()
+    elif command == "debug":
+      print( str( sub_client ) )
+      print( str( userdata ) )
+    else:
+      print( "The command \"" + str( command ) + "\" is not recognized." )
+      print( "Currently recognized commands are:\n\tpublishTelemetry\n\tchangeTelemetryInterval\n\tchangeSeaLevelPressure\n\tpublishStatus" )
   else:
     print( "Message did not contain a command property." )
 
@@ -123,6 +111,12 @@ def publish_telemetry():
 
 def poll_telemetry():
   telemetry['cpuTemp'] = gz.CPUTemperature().temperature
+
+
+def close_mqtt():
+  client.unsubscribe( configuration['controlTopic'] )
+  client.loop_stop()
+  client.disconnect()
 
 
 def main( argv ):
@@ -175,7 +169,12 @@ def main( argv ):
     client.loop_start()
     while True:
       if not client.is_connected():
-        client.reconnect()
+        try:
+          client.reconnect()
+        except TimeoutError:
+          print( "Timeout encountered while trying to reconnect to the MQTT broker!" )
+          close_mqtt()
+          break
       current_time = epoch_time()
       interval = configuration['publishInterval']
       if current_time - interval > last_publish:
@@ -185,9 +184,7 @@ def main( argv ):
 
   except KeyboardInterrupt:
     print( "\nKeyboard interrupt detected, exiting...\n" )
-    client.loop_stop()
-    client.unsubscribe( configuration['controlTopic'] )
-    client.disconnect()
+    close_mqtt()
   except KeyError as key_error:
     log_string = "Python dictionary key error: %s" % str( key_error )
     print( log_string )
