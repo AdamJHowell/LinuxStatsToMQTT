@@ -20,7 +20,6 @@ configuration = json.loads( '{}' )
 config_file_name = "config.json"
 last_publish = 0
 telemetry['macAddress'] = ':'.join( ("%012X" % get_mac())[i:i + 2] for i in range( 0, 12, 2 ) )
-print( "Client ID will be " + telemetry['macAddress'] )
 client = mqtt.Client( client_id = telemetry['macAddress'] )
 
 
@@ -189,6 +188,9 @@ def main( argv ):
     print( log_string )
   except ConnectionRefusedError as connection_error:
     print( "Connection error: " + str( connection_error ) )
+  except TimeoutError:
+    print( "Timeout encountered while connecting to the MQTT broker!" )
+    close_mqtt()
 
 
 if __name__ == "__main__":
