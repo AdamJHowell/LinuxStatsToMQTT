@@ -143,6 +143,7 @@ def main( argv ):
     telemetry['brokerAddress'] = configuration['brokerAddress']
     telemetry['brokerPort'] = configuration['brokerPort']
     print( "Hostname: " + host_name )
+    print( "IP address: " + telemetry['ipAddress'] )
     print( "Current time: " + get_timestamp() )
     print( "Using broker address: " + configuration['brokerAddress'] )
     print( "Using broker port: " + configuration['brokerPort'] )
