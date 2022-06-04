@@ -169,6 +169,8 @@ def main( argv ):
     while True:
       if not client.is_connected():
         try:
+          # Don't flood the broker with reconnect attempts.
+          time.sleep( 3 )
           client.reconnect()
         except TimeoutError:
           print( "Timeout encountered while trying to reconnect to the MQTT broker!" )
