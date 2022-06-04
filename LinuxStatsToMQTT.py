@@ -11,6 +11,7 @@ import json
 import time
 import socket
 import datetime
+import threading
 import gpiozero as gz
 import paho.mqtt.client as mqtt
 from uuid import getnode as get_mac
@@ -133,6 +134,7 @@ def main( argv ):
     with open( config_file_name, "r" ) as config_file:
       configuration = json.load( config_file )
 
+    event = threading.Event()
     # Create the Dictionary to hold results, and set the static components.
     telemetry['ipAddress'] = get_ip()
     host_name = socket.gethostname()
@@ -170,7 +172,7 @@ def main( argv ):
       if not client.is_connected():
         try:
           # Don't flood the broker with reconnect attempts.
-          time.sleep( 3 )
+          event.wait( 3 )
           client.reconnect()
         except TimeoutError:
           print( "Timeout encountered while trying to reconnect to the MQTT broker!" )
